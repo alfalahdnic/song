@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falah Video Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #1a2a6c, #b21f1f, #fdbb2d);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            background: #000;
+        }
+        
+        video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .controls {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            background: rgba(20, 20, 20, 0.9);
+        }
+        
+        .play-pause, .fullscreen, .mute {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            margin-right: 15px;
+            outline: none;
+            transition: color 0.2s;
+        }
+        
+        .play-pause:hover, .fullscreen:hover, .mute:hover {
+            color: #fdbb2d;
+        }
+        
+        .progress-container {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin: 0 15px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .progress {
+            height: 100%;
+            background: #fdbb2d;
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s;
+        }
+        
+        .time {
+            color: white;
+            font-size: 14px;
+            margin: 0 10px;
+        }
+        
+        .volume-container {
+            display: flex;
+            align-items: center;
+            width: 100px;
+        }
+        
+        .volume-slider {
+            width: 70px;
+            -webkit-appearance: none;
+            background: transparent;
+            cursor: pointer;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+        }
+        
+        .title {
+            color: white;
+            padding: 15px 20px 5px;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .loop-indicator {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .loop-toggle {
+            margin-left: 8px;
+            position: relative;
+            width: 40px;
+            height: 20px;
+        }
+        
+        .loop-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .loop-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .loop-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .loop-slider {
+            background-color: #fdbb2d;
+        }
+        
+        input:checked + .loop-slider:before {
+            transform: translateX(20px);
+        }
+        
+        /* Fullscreen styles */
+        :-webkit-full-screen .video-container {
+            width: 100%;
+            height: 100%;
+            padding-top: 0;
+        }
+        
+        :-webkit-full-screen video {
+            position: static;
+            height: 100%;
+        }
+        
+        :-moz-full-screen .video-container {
+            width: 100%;
+            height: 100%;
+            padding-top: 0;
+        }
+        
+        :-moz-full-screen video {
+            position: static;
+            height: 100%;
+        }
+        
+        :-ms-fullscreen .video-container {
+            width: 100%;
+            height: 100%;
+            padding-top: 0;
+        }
+        
+        :-ms-fullscreen video {
+            position: static;
+            height: 100%;
+        }
+        
+        :fullscreen .video-container {
+            width: 100%;
+            height: 100%;
+            padding-top: 0;
+        }
+        
+        :fullscreen video {
+            position: static;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="title">Falah Video Player</h2>
+        <div class="video-container">
+            <video id="videoPlayer">
+                <source src="video_2025-09-02_09-24-10.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <div class="controls">
+            <button class="play-pause" id="playPause">
+                <i class="fas fa-play"></i>
+            </button>
+            <span class="time" id="currentTime">0:00</span>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress" id="progress"></div>
+            </div>
+            <span class="time" id="duration">0:00</span>
+            
+            <button class="mute" id="mute">
+                <i class="fas fa-volume-up"></i>
+            </button>
+            <div class="volume-container">
+                <input type="range" class="volume-slider" id="volume" min="0" max="1" step="0.01" value="1">
+            </div>
+            
+            <div class="loop-indicator">
+                <span>Loop</span>
+                <label class="loop-toggle">
+                    <input type="checkbox" id="loopToggle" checked>
+                    <span class="loop-slider"></span>
+                </label>
+            </div>
+            
+            <button class="fullscreen" id="fullscreen">
+                <i class="fas fa-expand"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('videoPlayer');
+            const playPauseBtn = document.getElementById('playPause');
+            const muteBtn = document.getElementById('mute');
+            const volumeSlider = document.getElementById('volume');
+            const progress = document.getElementById('progress');
+            const progressContainer = document.getElementById('progressContainer');
+            const currentTimeElement = document.getElementById('currentTime');
+            const durationElement = document.getElementById('duration');
+            const fullscreenBtn = document.getElementById('fullscreen');
+            const loopToggle = document.getElementById('loopToggle');
+            
+            // Set video to loop by default
+            video.loop = true;
+            
+            // Play & Pause
+            playPauseBtn.addEventListener('click', function() {
+                if (video.paused) {
+                    video.play();
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    video.pause();
+                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+            
+            // Mute & Unmute
+            muteBtn.addEventListener('click', function() {
+                video.muted = !video.muted;
+                muteBtn.innerHTML = video.muted ? 
+                    '<i class="fas fa-volume-mute"></i>' : 
+                    '<i class="fas fa-volume-up"></i>';
+            });
+            
+            // Volume Control
+            volumeSlider.addEventListener('input', function() {
+                video.volume = volumeSlider.value;
+                if (video.volume == 0) {
+                    muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                } else {
+                    muteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                }
+            });
+            
+            // Update Progress
+            video.addEventListener('timeupdate', function() {
+                const percent = (video.currentTime / video.duration) * 100;
+                progress.style.width = `${percent}%`;
+                
+                // Update time displays
+                currentTimeElement.textContent = formatTime(video.currentTime);
+                if (!isNaN(video.duration)) {
+                    durationElement.textContent = formatTime(video.duration);
+                }
+            });
+            
+            // Click on Progress Bar
+            progressContainer.addEventListener('click', function(e) {
+                const pos = (e.pageX - this.offsetLeft) / this.offsetWidth;
+                video.currentTime = pos * video.duration;
+            });
+            
+            // Fullscreen
+            fullscreenBtn.addEventListener('click', function() {
+                if (!document.fullscreenElement) {
+                    if (video.requestFullscreen) {
+                        video.requestFullscreen();
+                    } else if (video.webkitRequestFullscreen) {
+                        video.webkitRequestFullscreen();
+                    } else if (video.msRequestFullscreen) {
+                        video.msRequestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
+            });
+            
+            // Update fullscreen icon based on fullscreen status
+            document.addEventListener('fullscreenchange', updateFullscreenButton);
+            document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+            document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+            document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+            
+            function updateFullscreenButton() {
+                if (document.fullscreenElement || 
+                    document.webkitFullscreenElement || 
+                    document.mozFullScreenElement ||
+                    document.msFullscreenElement) {
+                    fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                } else {
+                    fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                }
+            }
+            
+            // Loop Toggle
+            loopToggle.addEventListener('change', function() {
+                video.loop = loopToggle.checked;
+            });
+            
+            // Format time in minutes:seconds
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                seconds = Math.floor(seconds % 60);
+                return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            }
+            
+            // Initialize video time display
+            video.addEventListener('loadedmetadata', function() {
+                durationElement.textContent = formatTime(video.duration);
+            });
+            
+            // Auto-play video when page loads
+            video.play();
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        });
+    </script>
+</body>
+</html>
